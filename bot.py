@@ -4,12 +4,11 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 
 def start(update: Update, context: CallbackContext) -> None:
     """Start command handler."""
-    update.message.reply_text('Bot started. Use /delete_upcoming_messages to delete upcoming messages in the channel.')
+    update.message.reply_text('Bot started. Please enter the channel ID from which you want to delete upcoming messages.')
 
-def delete_upcoming_messages(update: Update, context: CallbackContext) -> None:
-    """Delete upcoming messages in the channel, excluding videos and documents."""
-    # Get the channel ID
-    channel_id = '@your_channel_id'  # Replace with your channel ID
+def handle_channel_id(update: Update, context: CallbackContext) -> None:
+    """Handle the user-provided channel ID."""
+    channel_id = update.message.text.strip()  # Get the channel ID entered by the user
     
     # Get the list of upcoming messages in the channel
     messages = context.bot.get_chat_messages(chat_id=channel_id, limit=100)
@@ -41,10 +40,11 @@ def main() -> None:
 
     # Register command handlers
     dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(CommandHandler('delete_upcoming_messages', delete_upcoming_messages))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_channel_id))
 
     updater.start_polling()
     updater.idle()
 
-if name == 'main':
+if __name__ == '__main__':
     main()
+    
