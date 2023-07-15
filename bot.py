@@ -10,24 +10,24 @@ def handle_channel_id(update: Update, context: CallbackContext) -> None:
     """Handle the user-provided channel ID."""
     if 'waiting_for_channel_id' in context.bot_data and context.bot_data['waiting_for_channel_id']:
         channel_id = update.message.text.strip()  # Get the channel ID entered by the user
-        
-        # Get the list of upcoming messages in the channel
-        messages = context.bot.get_chat_messages(chat_id=channel_id, limit=100)
+
+        # Get the list of messages in the channel
+        messages = context.bot.get_chat(channel_id).get_messages(limit=100)
 
         for message in messages:
             if not isinstance(message, Message):
                 # Skip non-message items
                 continue
-            
+
             if message.document or message.video:
                 # Skip messages that are videos or documents
                 continue
-            
+
             # Delete the message
             context.bot.delete_message(chat_id=channel_id, message_id=message.message_id)
 
         update.message.reply_text('All upcoming messages (excluding videos and documents) have been deleted.')
-        
+
         # Reset the waiting_for_channel_id flag
         context.bot_data['waiting_for_channel_id'] = False
     else:
