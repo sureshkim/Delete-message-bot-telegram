@@ -7,9 +7,7 @@
     "heroku-redis"
   ],
   "buildpacks": [
-    {
-      "url": "heroku/python"
-    }
+    { "url": "heroku/python" }
   ],
   "env": {
     "TOKEN": {
@@ -19,7 +17,7 @@
   "formation": {
     "worker": {
       "quantity": 1,
-      "size": "standard-1X" // Update the process tier here
+      "size": "standard-1X"
     }
   }
 }
