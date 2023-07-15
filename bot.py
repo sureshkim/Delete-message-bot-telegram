@@ -1,6 +1,9 @@
 import os
-from telegram import Update, Message
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, Filters
+from telethon import TelegramClient
+from telethon.tl.functions.channels import GetFullChannelRequest
+from telethon.tl.types import Channel
 
 def start(update: Update, context: CallbackContext) -> None:
     """Start command handler."""
@@ -10,31 +13,33 @@ def handle_message(update: Update, context: CallbackContext) -> None:
     """Handle incoming messages."""
     message = update.message
 
-    if message.video or (message.document and message.document.file_name.endswith(('.mkv', '.MP4'))):
-        # Skip videos, MKV files, and MP4 files
-        return
+    if message.chat.type == 'channel':
+        channel_id = message.chat.id
+        client = TelegramClient('session_name', API_ID, API_HASH)
+        client.start()
 
-    # Delete the message
-    context.bot.delete_message(chat_id=message.chat_id, message_id=message.message_id)
+        try:
+            channel = client(GetFullChannelRequest(channel=channel_id))
+            if isinstance(channel.chats[0], Channel):
+                client.delete_messages(entity=channel.chats[0], message_ids=[message.message_id])
+        except Exception as e:
+            print(f'Error deleting message in channel: {str(e)}')
+        finally:
+            client.disconnect()
 
 def main() -> None:
     """Main function to run the bot."""
-    # Get the Telegram bot token from the environment variable
-    token = os.environ.get('TOKEN')
-
-    if token is None:
-        raise ValueError('Telegram bot token not found. Make sure to set the TOKEN environment variable.')
-
-    updater = Updater(token)
+    token = os.environ.get('BOT_TOKEN')
+    updater = Updater(token, use_context=True)
     dispatcher = updater.dispatcher
 
     # Register command handlers
     dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(MessageHandler(Filters.all, handle_message))
+    dispatcher.add_handler(MessageHandler(Filters.all & ~Filters.command, handle_message))
 
     updater.start_polling()
     updater.idle()
 
 if __name__ == '__main__':
     main()
-          
+    
