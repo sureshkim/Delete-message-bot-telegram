@@ -1,0 +1,25 @@
+{
+  "name": "telegram-bot",
+  "description": "Telegram bot to delete upcoming messages",
+  "repository": "https://github.com/sureshkim/Delete-message-bot-telegram",
+  "keywords": ["telegram", "bot"],
+  "addons": [
+    "heroku-redis"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "TOKEN": {
+      "description": "Telegram bot token"
+    }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "free"
+    }
+  }
+}
