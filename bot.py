@@ -4,34 +4,18 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 
 def start(update: Update, context: CallbackContext) -> None:
     """Start command handler."""
-    update.message.reply_text('Bot started. Please enter the channel ID from which you want to delete upcoming messages.')
+    update.message.reply_text('Bot started. I will automatically delete messages in every chat where I am added, except for videos (MKV, MP4).')
 
-def handle_channel_id(update: Update, context: CallbackContext) -> None:
-    """Handle the user-provided channel ID."""
-    if 'waiting_for_channel_id' in context.bot_data and context.bot_data['waiting_for_channel_id']:
-        channel_id = update.message.text.strip()  # Get the channel ID entered by the user
+def handle_message(update: Update, context: CallbackContext) -> None:
+    """Handle incoming messages."""
+    message = update.message
 
-        # Get the list of messages in the channel
-        messages = context.bot.get_chat(channel_id).get_messages(limit=100)
+    if message.video or (message.document and message.document.file_name.endswith(('.mkv', '.MP4'))):
+        # Skip videos, MKV files, and MP4 files
+        return
 
-        for message in messages:
-            if not isinstance(message, Message):
-                # Skip non-message items
-                continue
-
-            if message.document or message.video:
-                # Skip messages that are videos or documents
-                continue
-
-            # Delete the message
-            context.bot.delete_message(chat_id=channel_id, message_id=message.message_id)
-
-        update.message.reply_text('All upcoming messages (excluding videos and documents) have been deleted.')
-
-        # Reset the waiting_for_channel_id flag
-        context.bot_data['waiting_for_channel_id'] = False
-    else:
-        update.message.reply_text('Please start the bot first to enter the channel ID.')
+    # Delete the message
+    context.bot.delete_message(chat_id=message.chat_id, message_id=message.message_id)
 
 def main() -> None:
     """Main function to run the bot."""
@@ -46,14 +30,11 @@ def main() -> None:
 
     # Register command handlers
     dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_channel_id))
-
-    # Set the waiting_for_channel_id flag to True
-    dispatcher.bot_data['waiting_for_channel_id'] = True
+    dispatcher.add_handler(MessageHandler(Filters.all, handle_message))
 
     updater.start_polling()
     updater.idle()
 
 if __name__ == '__main__':
     main()
-    
+          
